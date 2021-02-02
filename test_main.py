@@ -1,4 +1,3 @@
-import numpy as np
 from fastapi.testclient import TestClient
 
 from main import app
@@ -6,15 +5,13 @@ from main import app
 client = TestClient(app)
 
 
-def run_test(mmr0, rd0, winning_team, number_of_teams, mmr1, rd1):
+def run_test(mmr0, rd0, t1win, mmr1, rd1):
     response = client.post(
         "/mmr/update",
         json={
-            "ratings_list": mmr0,
-            "rds_list": rd0,
-            "winning_team": winning_team,
-            "number_of_teams": number_of_teams
-        },
+          "ratings_list": mmr0,
+          "rds_list": rd0,
+          "t1_won": t1win},
     )
     assert response.status_code == 200
 
@@ -23,8 +20,8 @@ def run_test(mmr0, rd0, winning_team, number_of_teams, mmr1, rd1):
     ratings_list = result["ratings_list"]
     rds_list = result["rds_list"]
 
-    rl = [np.round(num) for num in ratings_list]
-    rd = [np.round(num) for num in rds_list]
+    rl = [round(num) for num in ratings_list]
+    rd = [round(num) for num in rds_list]
 
     assert rl == mmr1
     assert rd == rd1
@@ -32,51 +29,27 @@ def run_test(mmr0, rd0, winning_team, number_of_teams, mmr1, rd1):
 
 def test_2x2():
     run_test(
-        [1400, 1600, 1340, 1700],
-        [350, 350, 350, 350],
-        0,
-        2,
-        [1466, 1659, 1269, 1645],
-        [323, 327, 328, 337]
+      [ 1400, 1600, 1340, 1700 ],
+      [ 350, 350, 350, 350 ],
+      True,
+      [1530, 1714, 1203, 1592],
+      [278, 278, 278, 278]
     )
 
 
 def test_1x1():
     run_test(
-        [2000, 1500],
-        [90, 350],
-        0,
-        2,
-        [2002, 1467],
-        [89, 316]
+      [ 2000, 1500 ],
+      [ 90, 350 ],
+      True,
+      [2002, 1465],
+      [90, 318]
     )
     run_test(
-        [2000, 1500],
-        [90, 350],
-        1,
-        2,
-        [1986, 1732],
-        [90, 336]
+      [ 2000, 1500 ],
+      [ 90, 350 ],
+      False,
+      [1966, 2021],
+      [90, 318]
     )
 
-
-def test_4x4():
-    run_test(
-        [1400, 1600, 1340, 1700, 1563, 1490, 1520, 1590],
-        [350, 350, 350, 350, 278, 290, 310, 302],
-        0,
-        2,
-        [1455, 1649, 1398, 1746, 1531, 1453, 1479, 1553],
-        [327, 331, 326, 333, 275, 286, 306, 299]
-    )
-
-
-def test_ffa():
-    run_test(
-        [1400, 1600, 1340, 1700],
-        [350, 350, 350, 350],
-        2,
-        4,
-        [1370, 1555, 1473, 1646],
-        [330, 329, 354, 330]
-    )
