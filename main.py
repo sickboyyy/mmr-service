@@ -10,6 +10,10 @@ app = FastAPI()
 
 @app.post("/mmr/update")
 async def update_mmr(body: UpdateMmrRequestBody) -> UpdateMmrResponseBody:
+    for i, rd in enumerate(body.rds_list):
+        if rd < 80:
+            body.rds_list[i] *= 80/60.25
+    
     for i, rating in enumerate(body.ratings_list):
         if rating < 0:
             body.ratings_list[i] = 0
