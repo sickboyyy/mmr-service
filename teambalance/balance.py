@@ -35,6 +35,23 @@ class Balance:
     def __init__(self):
         self.superset = {}
 
+    def parse_game_mode(self, game_mode):
+        """Parse a game mode string into number of teams and players.
+        This might come useful to simplify calling generate_superset()
+        externally, if we would want to generate for all available game modes
+        in advance.
+
+        Args:
+            game_mode (str): Game mode in string format (e.g. "3v3v3v3")
+
+        Returns:
+            A tuple containing the number of teams and the number of players
+            per team.
+        """
+        num_teams = game_mode.count(game_mode[0])
+        num_players_per_team = int(game_mode[0])
+        return (num_teams, num_players_per_team)
+
     def _recursion(self, set_players, potential_games, num_players_per_team):
         """TODO description.
 
@@ -56,7 +73,7 @@ class Balance:
 
         return potential_game_next
 
-    def _generate_superset(self, num_teams, num_players_per_team):
+    def generate_superset(self, num_teams, num_players_per_team):
         """TODO description.
 
         Args:
@@ -117,11 +134,10 @@ class Balance:
         Returns:
             TODO
         """
-        num_teams = game_mode.count(game_mode[0])
-        num_players_per_team = int(game_mode[0])
+        (num_teams, num_players_per_team) = self.parse_game_mode(game_mode)
 
         if game_mode not in self.superset:
-            self.superset[game_mode] = self._generate_superset(num_teams,
+            self.superset[game_mode] = self.generate_superset(num_teams,
                                                               num_players_per_team)
 
         most_fair = 1
