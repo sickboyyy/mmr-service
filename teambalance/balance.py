@@ -35,7 +35,17 @@ class Balance:
     def __init__(self):
         self.superset = {}
 
-    def recursion(self, set_players, potential_games, num_players_per_team):
+    def _recursion(self, set_players, potential_games, num_players_per_team):
+        """TODO description.
+
+        Args:
+            set_players: TODO
+            potential_games: TODO
+            num_players_per_team: TODO
+
+        Returns:
+            TODO
+        """
         potential_game_next = []
         for game in potential_games:
             set_players_left = set_players - set([p for team in game for p in list(team)])
@@ -46,7 +56,16 @@ class Balance:
 
         return potential_game_next
 
-    def generate_superset(self, num_teams, num_players_per_team):
+    def _generate_superset(self, num_teams, num_players_per_team):
+        """TODO description.
+
+        Args:
+            num_teams (int): Number of participating teams.
+            num_players_per_team (int): Number of players for each team.
+
+        Returns:
+            TODO
+        """
         superset = set()
         set_players = set(i for i in range(num_teams * num_players_per_team))
         potential_games = []
@@ -55,12 +74,12 @@ class Balance:
 
         counter = 1
         while counter < num_teams:
-            potential_games = self.recursion(set_players, potential_games, num_players_per_team)
+            potential_games = self._recursion(set_players, potential_games, num_players_per_team)
             counter += 1
 
         return set(frozenset(game) for game in potential_games)
 
-    def game_odds(self, ratings_game, rds, num_teams, num_players_per_team):
+    def _game_odds(self, ratings_game, rds, num_teams, num_players_per_team):
         """This gives the winning odds for each team for configuration of the game.
 
         Args:
@@ -102,14 +121,14 @@ class Balance:
         num_players_per_team = int(game_mode[0])
 
         if game_mode not in self.superset:
-            self.superset[game_mode] = self.generate_superset(num_teams,
+            self.superset[game_mode] = self._generate_superset(num_teams,
                                                               num_players_per_team)
 
         most_fair = 1
         for game in self.superset[game_mode]:
             potential_game = [p for Team in game for p in Team]
             ratings_game = ratings[potential_game]
-            probas = self.game_odds(ratings_game, rds, num_teams, num_players_per_team)
+            probas = self._game_odds(ratings_game, rds, num_teams, num_players_per_team)
             
             # That's helpstone's metric for a fair game.
             fairness_game = np.max(probas) - np.min(probas)
