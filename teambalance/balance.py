@@ -14,22 +14,40 @@ class Balance:
     As we go from 15400 possibilities to 369600 - it's really worth doing it as runtime goes from ~1 sec to 30 secs.
     I generalized this to make it for any number of teams & number of players on the team.
     This only needs to be done "once" ever - so need to make sure it's not recalculated needlessly all the time
+
+    Examples:
+
+        ```python
+        ratings_G = np.round(np.random.normal(1500, 300, 12),0)
+        print(ratings_G)
+        rds_G = np.array([90]*12)
+        b = Balance()
+        teams_footies = b.find_best_game(ratings_G, rds_G, '3v3v3v3')
+        print(teams_footies)
+
+        ratings_G = np.round(np.random.normal(1500, 300, 8),0)
+        print(ratings_G)
+        rds_G = np.array([90]*8)
+        b = Balance()
+        teams_4s = b.find_best_game(ratings_G, rds_G, '4v4')
+        print(teams_4s)
+        ```
+
     """
 
     def __init__(self):
         self.superset = {}
 
-    def recursion(self, set_players, potential_games, P):
-        potential_G_next = []
-        for G in potential_games:
-            set_players_left = set_players - set([p for team in G for p in list(team)])
-            for T in combinations(set_players_left, P):
-                G_T = G.copy()
-                fs = frozenset(T)
-                G_T.append(fs)
-                potential_G_next.append(G_T)
+    def recursion(self, set_players, potential_games, num_players_per_team):
+        potential_game_next = []
+        for game in potential_games:
+            set_players_left = set_players - set([p for team in game for p in list(team)])
+            for team in combinations(set_players_left, num_players_per_team):
+                game_copy = game.copy()
+                game_copy.append(frozenset(team))
+                potential_game_next.append(game_copy)
 
-        return potential_G_next
+        return potential_game_next
 
     def generate_superset(self, num_teams, num_players_per_team):
         superset = set()
@@ -47,8 +65,16 @@ class Balance:
 
     def game_odds(self, ratings_game, rds, num_teams, num_players_per_team):
         """This gives the winning odds for each team for configuration of the game.
-        """
 
+        Args:
+            ratings_game: TODO
+            rds: TODO
+            num_teams (int): Number of participating teams.
+            num_players_per_team (int): Number of players for each team.
+
+        Returns:
+            TODO
+        """
         num_players_per_game = len(rds)
         rd_game = np.sqrt(np.sum(rds ** 2) + num_players_per_game * BETA ** 2)
 
@@ -65,11 +91,16 @@ class Balance:
         return odds
 
     def find_best_game(self, ratings, rds, game_mode):
-        """
-        :param game_mode: Should be of the form "PvPvP" or "PonPonP".
-        """
-        # Number of teams is occurences of "v"+1
+        """Finds the most balanced game.
 
+        Args:
+            ratings: TODO
+            rds: TODO
+            game_mode (str): Game mode in the form "PvPvP" or "PonPonP" (e.g. "3v3v3v3").
+
+        Returns:
+            TODO
+        """
         num_teams = game_mode.count(game_mode[0])
         num_players_per_team = int(game_mode[0])
 
@@ -95,19 +126,3 @@ class Balance:
         #       In order to simplify life of maintainers, should make these
         #       as explicit as possible.
         return [int(np.ceil((best_game.index(p) + 1) / num_players_per_team)) for p in range(num_teams * num_players_per_team)]
-
-
-# Example usage
-# ratings_G = np.round(np.random.normal(1500, 300, 12),0)
-# print(ratings_G)
-# rds_G = np.array([90]*12)
-# b = Balance()
-# teams_footies = b.find_best_game(ratings_G, rds_G, '3v3v3v3')
-# print(teams_footies)
-
-# ratings_G = np.round(np.random.normal(1500, 300, 8),0)
-# print(ratings_G)
-# rds_G = np.array([90]*8)
-# b = Balance()
-# teams_4s = b.find_best_game(ratings_G, rds_G, '4v4')
-# print(teams_4s)
