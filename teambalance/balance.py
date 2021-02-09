@@ -13,7 +13,6 @@ class Balance:
     This only needs to be done "once" ever - so need to make sure it's not recalculated needlessly all the time
 
     Examples:
-
         ```python
         ratings_G = np.round(np.random.normal(1500, 300, 12),0)
         print(ratings_G)
@@ -29,7 +28,6 @@ class Balance:
         teams_4s = b.find_best_game(ratings_G, rds_G, '4v4')
         print(teams_4s)
         ```
-
     """
 
     def __init__(self):
