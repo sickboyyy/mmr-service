@@ -63,15 +63,17 @@ class Balance:
         return (num_teams, num_players_per_team)
 
     def _recursion(self, set_players, potential_games, num_players_per_team):
-        """TODO description.
+        """Expands the set of potential_games by adding (all the possible combinations of)
+           a new team. This function gets called (T-1) times where T is the number
+           of teams for that game mode.
 
         Args:
-            set_players: TODO
-            potential_games: TODO
-            num_players_per_team: TODO
+            set_players: the set players.
+            potential_games: the incomplete set of potential games.
+            num_players_per_team: the number of players per team.
 
         Returns:
-            TODO
+            Potential_games with one more team than before.
         """
         potential_game_next = []
         for game in potential_games:
@@ -84,14 +86,15 @@ class Balance:
         return potential_game_next
 
     def generate_superset(self, num_teams, num_players_per_team):
-        """TODO description.
+        """Generates the set of unique games with a certain number of players
+           and a certain number of players per team.
 
         Args:
             num_teams (int): Number of participating teams.
             num_players_per_team (int): Number of players for each team.
 
         Returns:
-            TODO
+            A set that has all the unique games for that game mode.
         """
         set_players = set(i for i in range(num_teams * num_players_per_team))
         potential_games = []
