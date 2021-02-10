@@ -3,10 +3,11 @@ import uvicorn
 from fastapi import FastAPI
 
 from mmr.bayesian_rating_w3c import UpdateMmrRequestBody, update_after_game, UpdateMmrResponseBody
-from teambalance.balance import BalanceTeamResponseBody, BalanceTeamRequestBody, find_best_game
+from teambalance.balance import BalanceTeamResponseBody, BalanceTeamRequestBody, Balance
 
 app = FastAPI()
 
+balance = Balance()
 
 @app.post("/mmr/update")
 async def update_mmr(body: UpdateMmrRequestBody) -> UpdateMmrResponseBody:
@@ -31,7 +32,7 @@ async def update_mmr(body: BalanceTeamRequestBody) -> BalanceTeamResponseBody:
         if rating < 0:
             body.ratings_list[i] = 0
 
-    return find_best_game(np.array(body.ratings_list), np.array(body.rds_list), body.gamemode)
+    return balance.find_best_game(np.array(body.ratings_list), np.array(body.rds_list), body.gamemode)
 
 
 if __name__ == "__main__":
