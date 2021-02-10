@@ -15,7 +15,7 @@ def test_team_balance_3v3v3v3():
     sets = len(b.superset[game_mode])
     assert sets == 15400
 
-def test_team_balance_4v4():
+def test_team_balance_4rtv4rt():
     ratings_G = np.round(np.random.normal(1500, 300, 8),0)
     rds_G = np.array([90]*8)
 
@@ -27,7 +27,7 @@ def test_team_balance_4v4():
     sets = len(games_set_constrained)
     assert sets == 35
 
-def test_team_balance_3plus1v4():
+def test_team_balance_3atplus1v4rt():
     ratings_G = np.round(np.random.normal(1500, 300, 8),0)
     rds_G = np.array([90]*8)
 
@@ -40,7 +40,7 @@ def test_team_balance_3plus1v4():
     sets = len(games_set_constrained)
     assert sets == 5
 
-def test_team_balance_4atv4():
+def test_team_balance_4atv4rt():
     ratings_G = np.round(np.random.normal(1500, 300, 8),0)
     rds_G = np.array([90]*8)
 
