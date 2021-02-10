@@ -1,7 +1,19 @@
 import numpy as np
 from itertools import combinations
+from pydantic import BaseModel
 
 from common.constants import C_SD, BETA
+
+class BalanceTeamRequestBody(BaseModel):
+    ratings_list: list
+    rds_list: list
+    gamemode: str
+
+
+class BalanceTeamResponseBody(BaseModel):
+    ratings_list: list
+    rds_list: list
+
 
 class Balance:
     """
