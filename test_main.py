@@ -17,17 +17,17 @@ def run_test(mmr0, rd0, winning_team, number_of_teams, mmr1, rd1):
         },
     )
     assert response.status_code == 200
+
     result = response.json()
 
     ratings_list = result["ratings_list"]
     rds_list = result["rds_list"]
-    number_of_players = len(ratings_list)
 
-    diff_mmr = [np.abs(ratings_list[i] - mmr1[i]) for i in range(number_of_players)]
-    diff_rd = [np.abs(rds_list[i] - rd1[i]) for i in range(number_of_players)]
+    rl = [np.round(num) for num in ratings_list]
+    rd = [np.round(num) for num in rds_list]
 
-    assert np.max(diff_mmr) < 1
-    assert np.max(diff_rd) < 1
+    assert rl == mmr1
+    assert rd == rd1
 
 
 def test_2x2():
