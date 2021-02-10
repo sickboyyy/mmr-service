@@ -23,7 +23,7 @@ async def update_mmr(body: UpdateMmrRequestBody) -> UpdateMmrResponseBody:
 
 
 @app.post("/team/balance")
-async def update_mmr(body: BalanceTeamRequestBody) -> BalanceTeamResponseBody:
+async def balance_teams(body: BalanceTeamRequestBody) -> BalanceTeamResponseBody:
     for i, rd in enumerate(body.rds_list):
         if rd < 60.25:
             body.rds_list[i] = 60.25
