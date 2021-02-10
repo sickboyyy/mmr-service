@@ -93,7 +93,6 @@ class Balance:
         Returns:
             TODO
         """
-        superset = set()
         set_players = set(i for i in range(num_teams * num_players_per_team))
         potential_games = []
         for c in combinations(set_players, num_players_per_team):
@@ -110,13 +109,13 @@ class Balance:
         """This gives the winning odds for each team for configuration of the game.
 
         Args:
-            ratings_game: TODO
-            rds: TODO
+            ratings_game: ratings of players in the potential game, ordered by team
+            rds: rating deviations of players in the potential game, ordered by team
             num_teams (int): Number of participating teams.
             num_players_per_team (int): Number of players for each team.
 
         Returns:
-            TODO
+            a list of length num_teams with the modeled win probability for each team as values
         """
         num_players_per_game = len(rds)
         rd_game = np.sqrt(np.sum(rds ** 2) + num_players_per_game * BETA ** 2)
@@ -133,31 +132,52 @@ class Balance:
                       np.sum(np.exp((num_players_per_team * rating) / (C_SD * rd_game)))
         return odds
 
-    def find_best_game(self, ratings, rds, game_mode):
+    def _filter_constraints(self, gm_set, gm_const):
+        k = 0
+        teams = gm_const.split('+')
+        set_teams = set()
+        for team_size in teams:
+            arranged_team = frozenset(k + i for i in range(int(team_size)))
+            k += int(team_size)
+            set_teams.add(arranged_team)
+        gm_spec_set = set()
+        for potential_game in gm_set:
+            all_constraints = 1
+            for arranged_team in set_teams:
+                is_team = 0
+                for team in potential_game:
+                    is_team += arranged_team.issubset(team)
+                all_constraints *= is_team
+            if all_constraints == 1:
+                gm_spec_set.add(potential_game)
+        return gm_spec_set
+
+    def find_best_game(self, ratings, rds, game_mode, team_constraints):
         """Finds the most balanced game.
 
         Args:
             ratings: TODO
             rds: TODO
             game_mode (str): Game mode in the form "PvPvP" or "PonPonP" (e.g. "3v3v3v3").
+            team_constraints (str): A string in the form "T1+T2+T3+T4" (e.g. 1+1+2+1) that
 
         Returns:
-            TODO
+            a list with the index of the team each player should be put on
         """
         (num_teams, num_players_per_team) = self.parse_game_mode(game_mode)
 
         if game_mode not in self.superset:
             self.superset[game_mode] = self.generate_superset(num_teams,
                                                               num_players_per_team)
-
+        games_set_constrained = self._filter_constraints(self.superset[game_mode], team_constraints)
         most_fair = 1
-        for game in self.superset[game_mode]:
+        for game in games_set_constrained:
             potential_game = [p for Team in game for p in Team]
             ratings_game = ratings[potential_game]
-            probas = self._game_odds(ratings_game, rds, num_teams, num_players_per_team)
+            odds = self._game_odds(ratings_game, rds, num_teams, num_players_per_team)
             
             # That's helpstone's metric for a fair game.
-            fairness_game = np.max(probas) - np.min(probas)
+            fairness_game = np.max(odds) - np.min(odds)
 
             if fairness_game < most_fair:
                 best_game = potential_game
