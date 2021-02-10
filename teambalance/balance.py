@@ -156,3 +156,4 @@ class Balance:
         #       In order to simplify life of maintainers, should make these
         #       as explicit as possible.
         return [int(np.ceil((best_game.index(p) + 1) / num_players_per_team)) for p in range(num_teams * num_players_per_team)]
+      
