@@ -156,11 +156,10 @@ class Balance:
         """Finds the most balanced game.
 
         Args:
-            ratings: TODO
-            rds: TODO
+            ratings_game: ratings of players in the potential game, ordered by team
+            rds: rating deviations of players in the potential game, ordered by team
             game_mode (str): Game mode in the form "PvPvP" or "PonPonP" (e.g. "3v3v3v3").
-            team_constraints (str): A string in the form "T1+T2+T3+T4" (e.g. 1+1+2+1) that
-
+            team_constraints (str): A string in the form "T1+T2+T3+T4" (e.g. 1+1+2+1) that entails the AT constraints.
         Returns:
             a list with the index of the team each player should be put on
         """
