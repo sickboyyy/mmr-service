@@ -25,17 +25,16 @@ def test_footies():
     expected_set_cardinality = 15400
     balance_tester(ratings_G, rds_G, game_mode, 4, team_constraints, expected_teams, expected_set_cardinality)
 
-def test_2on2():
+def test_2RTvsRT():
     ratings_G = np.array([1500, 1400, 1400, 1200])
     rds_G = np.array([90]*4)
     game_mode = "2v2"
     team_constraints = "1+1+1+1"
     expected_teams = [1, 2, 2, 1]
-
     expected_set_cardinality = 3
     balance_tester(ratings_G, rds_G, game_mode, 2, team_constraints, expected_teams, expected_set_cardinality)
 
-def test_2on2_ATvs_RT():
+def test_2ATvs2RT():
     ratings_G = np.array([1500, 1400, 1400, 1200])
     rds_G = np.array([90]*4)
     game_mode = "2v2"
@@ -44,30 +43,27 @@ def test_2on2_ATvs_RT():
     expected_set_cardinality = 1
     balance_tester(ratings_G, rds_G, game_mode, 2, team_constraints, expected_teams, expected_set_cardinality)
 
-def test_4rtv4rt():
+def test_4RTvs4RT():
     ratings_G = np.array([1900, 1500, 1400, 1400, 1400, 1400, 1300, 1100])
     rds_G = np.array([90]*8)
-
     game_mode = "4v4"
     team_constraints = "1+1+1+1+1+1+1+1"
     expected_teams = [1, 1, 2, 2, 2, 2, 1, 1]
     expected_set_cardinality = 35
     balance_tester(ratings_G, rds_G, game_mode, 2, team_constraints, expected_teams, expected_set_cardinality)
 
-def test_3atplus1v4rt():
+def test_3ATplus1v4RT():
     ratings_G = np.array([1900, 1500, 1400, 1400, 1400, 1400, 1300, 1100])
     rds_G = np.array([90]*8)
-
     game_mode = "4v4"
     team_constraints = "4+1+1+1+1"
     expected_teams = [1, 1, 1, 1, 2, 2, 2, 2]
     expected_set_cardinality = 1
     balance_tester(ratings_G, rds_G, game_mode, 2, team_constraints, expected_teams, expected_set_cardinality)
 
-def test_2plus2v4rt():
+def test_2RTplus2ATv4RT():
     ratings_G = np.array([1900, 1500, 1400, 1400, 1400, 1400, 1300, 1100])
     rds_G = np.array([90]*8)
-
     game_mode = "4v4"
     team_constraints = "2+1+1+1+1+1+1"
     expected_teams = [1, 1, 2, 2, 2, 2, 1, 1]
