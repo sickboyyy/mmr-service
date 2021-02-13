@@ -119,17 +119,16 @@ class Balance:
         num_players_per_game = len(rds)
         rd_game = np.sqrt(np.sum(rds ** 2) + num_players_per_game * BETA ** 2)
 
-        ratings_team = np.array([])
+        rating_teams = []
         for team_index in range(num_teams):
             #ratings of the players on the team
             cur_game_ratings = ratings_game[team_index*num_players_per_team:(team_index + 1)*num_players_per_team]
             #geometric mean of the ratings on the team
             team_rating = np.prod(np.power(cur_game_ratings, 1 / float(num_players_per_team)))
-            np.append(ratings_team, team_rating)
-
+            rating_teams.append(team_rating)
+        ratings_T = np.array(rating_teams)
         #winning odds from Bradley-terry model
-        odds = np.exp((num_players_per_team * team_rating) / (C_SD * rd_game)) / \
-                      np.sum(np.exp((num_players_per_team * team_rating) / (C_SD * rd_game)))
+        odds = np.exp((num_players_per_team * ratings_T) / (C_SD * rd_game)) / np.sum(np.exp((num_players_per_team * ratings_T) / (C_SD * rd_game)))
         return odds
 
     def _filter_constraints(self, gm_set, gm_const):
@@ -178,6 +177,5 @@ class Balance:
             if fairness_game < most_fair:
                 best_game = potential_game
                 most_fair = fairness_game
-
         #this inverts the index so that each player, ordered as in the initial MMR list is mapped to a team
         return [int(np.ceil((best_game.index(p) + 1) / num_players_per_team)) for p in range(num_teams * num_players_per_team)]
