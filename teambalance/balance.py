@@ -73,7 +73,7 @@ class Balance:
             num_players_per_team: the number of players per team.
 
         Returns:
-            Potential_games with one more team than before.
+            Potential_games with one more team than before call.
         """
         potential_game_next = []
         for game in potential_games:
@@ -100,12 +100,8 @@ class Balance:
         potential_games = []
         for c in combinations(set_players, num_players_per_team):
             potential_games.append([frozenset(c)])
-
-        counter = 1
-        while counter < num_teams:
+        for k in range(1,num_teams):
             potential_games = self._recursion(set_players, potential_games, num_players_per_team)
-            counter += 1
-
         return set(frozenset(game) for game in potential_games)
 
     def _game_odds(self, ratings_game, rds, num_teams, num_players_per_team):
@@ -123,16 +119,17 @@ class Balance:
         num_players_per_game = len(rds)
         rd_game = np.sqrt(np.sum(rds ** 2) + num_players_per_game * BETA ** 2)
 
-        # TODO: these following lines are a bit hell to understand, could use
-        #       some breakdown.
         ratings_team = np.array([])
-        for team in range(num_teams):
-            cur_ratings_game = ratings_game[team*num_players_per_team:(team + 1)*num_players_per_team]
-            rating = np.prod(np.power(cur_ratings_game, 1 / float(num_players_per_team)))
-            np.append(ratings_team, rating)
+        for team_index in range(num_teams):
+            #ratings of the players on the team
+            cur_game_ratings = ratings_game[team_index*num_players_per_team:(team_index + 1)*num_players_per_team]
+            #geometric mean of the ratings on the team
+            team_rating = np.prod(np.power(cur_game_ratings, 1 / float(num_players_per_team)))
+            np.append(ratings_team, team_rating)
 
-        odds = np.exp((num_players_per_team * rating) / (C_SD * rd_game)) / \
-                      np.sum(np.exp((num_players_per_team * rating) / (C_SD * rd_game)))
+        #winning odds from Bradley-terry model
+        odds = np.exp((num_players_per_team * team_rating) / (C_SD * rd_game)) / \
+                      np.sum(np.exp((num_players_per_team * team_rating) / (C_SD * rd_game)))
         return odds
 
     def _filter_constraints(self, gm_set, gm_const):
@@ -159,8 +156,8 @@ class Balance:
         """Finds the most balanced game.
 
         Args:
-            ratings_game: ratings of players in the potential game, ordered by team
-            rds: rating deviations of players in the potential game, ordered by team
+            ratings_game: ratings of players in the potential game
+            rds: rating deviations of players in the potential game
             game_mode (str): Game mode in the form "PvPvP" or "PonPonP" (e.g. "3v3v3v3").
             team_constraints (str): A string in the form "T1+T2+T3+T4" (e.g. 1+1+2+1) that entails the AT constraints.
         Returns:
@@ -186,7 +183,5 @@ class Balance:
                 # best_ratings = ratings_game
                 most_fair = fairness_game
 
-        # TODO: These one-liners should be avoided.
-        #       In order to simplify life of maintainers, should make these
-        #       as explicit as possible.
+        #this inverts the index so that each player, ordered as in the initial MMR list is mapped to a team
         return [int(np.ceil((best_game.index(p) + 1) / num_players_per_team)) for p in range(num_teams * num_players_per_team)]
