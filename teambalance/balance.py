@@ -63,15 +63,17 @@ class Balance:
         return (num_teams, num_players_per_team)
 
     def _recursion(self, set_players, potential_games, num_players_per_team):
-        """TODO description.
+        """Expands the set of potential_games by adding (all the possible combinations of)
+           a new team. This function gets called (T-1) times where T is the number
+           of teams for that game mode.
 
         Args:
-            set_players: TODO
-            potential_games: TODO
-            num_players_per_team: TODO
+            set_players: the set players.
+            potential_games: the incomplete set of potential games.
+            num_players_per_team: the number of players per team.
 
         Returns:
-            TODO
+            Potential_games with one more team than before call.
         """
         potential_game_next = []
         for game in potential_games:
@@ -84,87 +86,96 @@ class Balance:
         return potential_game_next
 
     def generate_superset(self, num_teams, num_players_per_team):
-        """TODO description.
+        """Generates the set of unique games with a certain number of players
+           and a certain number of players per team.
 
         Args:
             num_teams (int): Number of participating teams.
             num_players_per_team (int): Number of players for each team.
 
         Returns:
-            TODO
+            A set that has all the unique games for that game mode.
         """
-        superset = set()
         set_players = set(i for i in range(num_teams * num_players_per_team))
         potential_games = []
         for c in combinations(set_players, num_players_per_team):
             potential_games.append([frozenset(c)])
-
-        counter = 1
-        while counter < num_teams:
+        for k in range(1,num_teams):
             potential_games = self._recursion(set_players, potential_games, num_players_per_team)
-            counter += 1
-
         return set(frozenset(game) for game in potential_games)
 
     def _game_odds(self, ratings_game, rds, num_teams, num_players_per_team):
         """This gives the winning odds for each team for configuration of the game.
 
         Args:
-            ratings_game: TODO
-            rds: TODO
+            ratings_game: ratings of players in the potential game, ordered by team
+            rds: rating deviations of players in the potential game, ordered by team
             num_teams (int): Number of participating teams.
             num_players_per_team (int): Number of players for each team.
 
         Returns:
-            TODO
+            a list of length num_teams with the modeled win probability for each team as values
         """
         num_players_per_game = len(rds)
         rd_game = np.sqrt(np.sum(rds ** 2) + num_players_per_game * BETA ** 2)
 
-        # TODO: these following lines are a bit hell to understand, could use
-        #       some breakdown.
-        ratings_team = np.array([])
-        for team in range(num_teams):
-            cur_ratings_game = ratings_game[team*num_players_per_team:(team + 1)*num_players_per_team]
-            rating = np.prod(np.power(cur_ratings_game, 1 / float(num_players_per_team)))
-            np.append(ratings_team, rating)
-
-        odds = np.exp((num_players_per_team * rating) / (C_SD * rd_game)) / \
-                      np.sum(np.exp((num_players_per_team * rating) / (C_SD * rd_game)))
+        rating_teams = []
+        for team_index in range(num_teams):
+            #ratings of the players on the team
+            cur_game_ratings = ratings_game[team_index*num_players_per_team:(team_index + 1)*num_players_per_team]
+            #geometric mean of the ratings on the team
+            team_rating = np.prod(np.power(cur_game_ratings, 1 / float(num_players_per_team)))
+            rating_teams.append(team_rating)
+        ratings_T = np.array(rating_teams)
+        #winning odds from Bradley-terry model
+        odds = np.exp((num_players_per_team * ratings_T) / (C_SD * rd_game)) / np.sum(np.exp((num_players_per_team * ratings_T) / (C_SD * rd_game)))
         return odds
 
-    def find_best_game(self, ratings, rds, game_mode):
+    def _filter_constraints(self, gm_set, gm_const):
+        k = 0
+        teams = gm_const.split('+')
+        set_teams = set()
+        for team_size in teams:
+            arranged_team = frozenset(k + i for i in range(int(team_size)))
+            k += int(team_size)
+            set_teams.add(arranged_team)
+        gm_spec_set = set()
+        for potential_game in gm_set:
+            all_constraints = []
+            for arranged_team in set_teams:
+                all_constraints.append(any([arranged_team.issubset(team) for team in potential_game]))
+            if all(all_constraints):
+                gm_spec_set.add(potential_game)
+        return gm_spec_set
+
+    def find_best_game(self, ratings, rds, game_mode, team_constraints):
         """Finds the most balanced game.
 
         Args:
-            ratings: TODO
-            rds: TODO
+            ratings_game: ratings of players in the potential game
+            rds: rating deviations of players in the potential game
             game_mode (str): Game mode in the form "PvPvP" or "PonPonP" (e.g. "3v3v3v3").
-
+            team_constraints (str): A string in the form "T1+T2+T3+T4" (e.g. 1+1+2+1) that entails the AT constraints.
         Returns:
-            TODO
+            a list with the index of the team each player should be put on
         """
         (num_teams, num_players_per_team) = self.parse_game_mode(game_mode)
 
         if game_mode not in self.superset:
             self.superset[game_mode] = self.generate_superset(num_teams,
                                                               num_players_per_team)
-
+        games_set_constrained = self._filter_constraints(self.superset[game_mode], team_constraints)
         most_fair = 1
-        for game in self.superset[game_mode]:
+        for game in games_set_constrained:
             potential_game = [p for Team in game for p in Team]
             ratings_game = ratings[potential_game]
-            probas = self._game_odds(ratings_game, rds, num_teams, num_players_per_team)
+            odds = self._game_odds(ratings_game, rds, num_teams, num_players_per_team)
             
             # That's helpstone's metric for a fair game.
-            fairness_game = np.max(probas) - np.min(probas)
+            fairness_game = np.max(odds) - np.min(odds)
 
             if fairness_game < most_fair:
                 best_game = potential_game
-                # best_ratings = ratings_game
                 most_fair = fairness_game
-
-        # TODO: These one-liners should be avoided.
-        #       In order to simplify life of maintainers, should make these
-        #       as explicit as possible.
+        #this inverts the index so that each player, ordered as in the initial MMR list is mapped to a team
         return [int(np.ceil((best_game.index(p) + 1) / num_players_per_team)) for p in range(num_teams * num_players_per_team)]
