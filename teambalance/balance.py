@@ -142,13 +142,10 @@ class Balance:
             set_teams.add(arranged_team)
         gm_spec_set = set()
         for potential_game in gm_set:
-            all_constraints = 1
+            all_constraints = []
             for arranged_team in set_teams:
-                is_team = 0
-                for team in potential_game:
-                    is_team += arranged_team.issubset(team)
-                all_constraints *= is_team
-            if all_constraints == 1:
+                all_constraints.append(any([arranged_team.issubset(team) for team in potential_game]))
+            if all(all_constraints):
                 gm_spec_set.add(potential_game)
         return gm_spec_set
 
@@ -180,7 +177,6 @@ class Balance:
 
             if fairness_game < most_fair:
                 best_game = potential_game
-                # best_ratings = ratings_game
                 most_fair = fairness_game
 
         #this inverts the index so that each player, ordered as in the initial MMR list is mapped to a team
